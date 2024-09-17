@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Patterns4Printing Etsy Shop Feed</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-rss/4.3.0/jquery.rss.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -18,7 +18,7 @@
             max-width: 1200px;
             margin: 0 auto;
             background-color: white;
-            padding: 20px;
+            padding: 20pxl;
             border-radius: 5px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
@@ -70,118 +70,28 @@
         .feed-item a:hover {
             background-color: #c1e0c5;
         }
-        #rss-link {
-            text-align: center;
-            margin-top: 20px;
-        }
-        #rss-link a {
-            padding: 10px 20px;
-            background-color: #ff6600;
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
-            font-weight: bold;
-        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Patterns4Printing Etsy Shop Feed</h1>
         <div id="rss-feeds" class="feed-container"></div>
-        <div id="rss-link"></div>
     </div>
     <script>
-        const CORS_PROXY = 'https://cors-anywhere.herokuapp.com/';
-        const ETSY_RSS_URL = 'https://patterns4printing.etsy.com/rss';
-        
-        function fetchEtsyFeed() {
-            return $.ajax({
-                url: CORS_PROXY + ETSY_RSS_URL,
-                type: 'GET',
-                dataType: 'xml'
-            });
-        }
-
-        function parseEtsyFeed(xml) {
-            const items = $(xml).find('item');
-            const parsedItems = [];
-
-            items.each(function() {
-                const $this = $(this);
-                parsedItems.push({
-                    title: $this.find('title').text(),
-                    link: $this.find('link').text(),
-                    description: $this.find('description').text(),
-                    pubDate: $this.find('pubDate').text(),
-                    image: $this.find('media\\:content, content').attr('url')
-                });
-            });
-
-            return parsedItems;
-        }
-
-        function displayFeed(items) {
-            const container = $('#rss-feeds');
-            items.forEach(item => {
-                container.append(`
-                    <div class="feed-item">
-                        <img src="${item.image}" alt="${item.title}">
-                        <div class="feed-item-content">
-                            <h2>${item.title}</h2>
-                            <a href="${item.link}" target="_blank">View on Etsy</a>
-                        </div>
-                    </div>
-                `);
-            });
-        }
-
-        function generateRSSFeed(items) {
-            const feedUrl = window.location.href;
-            let rss = `<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/">
-    <channel>
-        <title>Patterns4Printing Etsy Shop Feed</title>
-        <link>${feedUrl}</link>
-        <description>Latest items from Patterns4Printing Etsy Shop</description>
-        <language>en-us</language>
-        <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>`;
-
-            items.forEach(item => {
-                rss += `
-        <item>
-            <title>${item.title}</title>
-            <link>${item.link}</link>
-            <description>${item.description}</description>
-            <pubDate>${item.pubDate}</pubDate>
-            <media:content url="${item.image}" medium="image" />
-        </item>`;
-            });
-
-            rss += `
-    </channel>
-</rss>`;
-
-            return rss;
-        }
-
-        function createRSSLink(rssContent) {
-            const blob = new Blob([rssContent], { type: 'application/rss+xml' });
-            const url = URL.createObjectURL(blob);
-            $('#rss-link').html(`<a href="${url}" download="patterns4printing_feed.xml">Download RSS Feed</a>`);
-        }
-
         $(document).ready(function() {
-            fetchEtsyFeed()
-                .done(function(xml) {
-                    const items = parseEtsyFeed(xml);
-                    displayFeed(items);
-                    const rssContent = generateRSSFeed(items);
-                    createRSSLink(rssContent);
-                })
-                .fail(function(xhr, status, error) {
-                    console.error("Error fetching RSS feed:", error);
-                    $('#rss-feeds').html('<p>Error loading feed. Please try again later.</p>');
-                });
+            $("#rss-feeds").rss("https://patterns4printing.etsy.com/rss", {
+                limit: 9,
+                effect: 'show',
+                header: false,
+                dateFormat: 'MMMM Do, YYYY',
+                entryTemplate: '<div class="feed-item">' +
+                    '<img src="{teaserImageUrl}" alt="{title}">' +
+                    '<div class="feed-item-content">' +
+                    '<h2>{title}</h2>' +
+                    '<a href="{url}" target="_blank">View on Etsy</a>' +
+                    '</div>' +
+                    '</div>'
+            });
         });
     </script>
 </body>
